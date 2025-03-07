@@ -1,9 +1,7 @@
 name: Release
 
 on:
-  push:
-    tags:
-      - '[0-9]*'
+  workflow_dispatch: 
 
 jobs:
   build:
@@ -20,34 +18,11 @@ jobs:
       run: chmod +x gradlew
     - name: Build with Gradle
       run: ./gradlew assembleRelease --stacktrace
-    - name: Sign APK
-      uses: r0adkll/sign-android-release@v1
-      id: sign_app
-      with:
-        releaseDirectory: archive/app/
-        signingKeyBase64: ${{ secrets.KEYSTORE_JKS_BASE64 }}
-        keyStorePassword: ${{ secrets.KEY_STORE_PASSWORD }}
-        alias: ${{ secrets.SIGNING_KEY_ALIAS }}
-        keyPassword: ${{ secrets.SIGNING_KEY_PASSWORD }}
-    - name: Rename Signed APKs
-      run: |
-        for FILE in archive/app/*unsigned-signed.apk
-        do
-          echo "${FILE} -> ${FILE/unsigned-signed/signed}"
-          mv "${FILE}" "${FILE/unsigned-signed/signed}"
-        done
     - name: Upload
       uses: actions/upload-artifact@v3.1.2
       with:
         name: Build Artifacts
         path: |
-          archive/app/*-signed.apk
+          archive/app/*.apk
           archive/app/*-mapping.txt
-    - name: Release
-      uses: marvinpinto/action-automatic-releases@latest
-      with:
-        repo_token: ${{ secrets.GITHUB_TOKEN }}
-        prerelease: false
-        files: |
-          archive/app/*-signed.apk
-          archive/app/*-mapping.txt
+          
